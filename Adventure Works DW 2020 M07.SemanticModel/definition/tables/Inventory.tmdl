@@ -1,0 +1,64 @@
+table Inventory
+	lineageTag: b2b21069-6b9f-44ac-917b-9f73f5f96e97
+
+	measure StockOnHand = ```
+			
+			CALCULATE(SUM(Inventory[UnitsBalance]),
+			LASTNONBLANK('Date'[Date], 
+			CALCULATE(SUM(Inventory[UnitsBalance]))))
+			```
+		formatString: 0
+		lineageTag: c4618bd9-1a47-42c8-ae1c-58c02a6f1571
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: db82e955-97d2-4c92-8c24-bfc8b93bffac
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 52bf511c-4d97-4f41-a3d0-a96962849b5e
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitsBalance
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: c3465e0b-b309-4e65-bb1a-0e194edbb487
+		summarizeBy: sum
+		sourceColumn: UnitsBalance
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Inventory-33fbae3f-820a-43cb-a637-0ffb37bddafa = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlServerInstance, SqlServerDatabase),
+				    dbo_FactProductInventory = Source{[Schema="dbo",Item="FactProductInventory"]}[Data],
+				    #"Expanded DimProduct" = Table.ExpandRecordColumn(dbo_FactProductInventory, "DimProduct", {"FinishedGoodsFlag"}, {"FinishedGoodsFlag"}),
+				    #"Filtered Rows1" = Table.SelectRows(#"Expanded DimProduct", each ([FinishedGoodsFlag] = true)),
+				    #"Removed Other Columns" = Table.SelectColumns(#"Filtered Rows1",{"ProductKey", "DateKey", "UnitsBalance"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

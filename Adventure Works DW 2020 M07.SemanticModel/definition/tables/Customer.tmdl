@@ -1,0 +1,121 @@
+table Customer
+	lineageTag: 50eb2785-d566-44e1-a20e-287780bb423b
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 19e04350-636b-4f79-9fca-27014ab93485
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer ID'
+		dataType: string
+		lineageTag: 8291ffb7-3aae-4ef0-9dd9-03c3d7876c38
+		summarizeBy: none
+		sourceColumn: Customer ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	column Customer
+		dataType: string
+		lineageTag: 4a9ece4b-28d0-40c3-954b-eb4779ca695f
+		isDefaultLabel
+		summarizeBy: none
+		sourceColumn: Customer
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	column City
+		dataType: string
+		lineageTag: f1788395-c9be-4231-a8e3-45fb3742cfba
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	column State-Province
+		dataType: string
+		lineageTag: 3c31c59c-1ba0-4162-967a-345b4fc68803
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: State-Province
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	column Country-Region
+		dataType: string
+		lineageTag: 1a317653-a5fa-4052-be7e-c6b08a761f4b
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: Country-Region
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	column 'Postal Code'
+		dataType: string
+		lineageTag: 04556d29-6254-48fb-b9f0-d8a51b4eb572
+		dataCategory: PostalCode
+		summarizeBy: none
+		sourceColumn: Postal Code
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	hierarchy Geography
+		lineageTag: 975bbe2d-4e8f-4cfe-829a-a8540b0af984
+
+		level Country-Region
+			lineageTag: 82aeb55f-f2f6-42fc-8ce0-a17760c845f6
+			column: Country-Region
+
+		level State-Province
+			lineageTag: 223b6883-253b-43ca-a560-62e930da1e57
+			column: State-Province
+
+		level City
+			lineageTag: 9282bdf1-8df7-405e-877f-25c146e58ea6
+			column: City
+
+		level 'Postal Code'
+			lineageTag: b07dcbf8-d0fb-482f-8db9-07f324dbb011
+			column: 'Postal Code'
+
+		level Customer
+			lineageTag: 7e1c4814-aefb-4969-b353-a134a0f303b9
+			column: Customer
+
+	partition Customer-01f41322-c19c-4b65-a4cb-85a8045da233 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlServerInstance, SqlServerDatabase),
+				    dbo_DimCustomer = Source{[Schema="dbo",Item="DimCustomer"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(dbo_DimCustomer,{"CustomerKey", "CustomerAlternateKey", "FirstName", "LastName", "DimGeography"}),
+				    #"Expanded DimGeography" = Table.ExpandRecordColumn(#"Removed Other Columns", "DimGeography", {"City", "StateProvinceName", "EnglishCountryRegionName", "PostalCode"}, {"City", "StateProvinceName", "EnglishCountryRegionName", "PostalCode"}),
+				    #"Merged Columns" = Table.CombineColumns(#"Expanded DimGeography",{"FirstName", "LastName"},Combiner.CombineTextByDelimiter(" ", QuoteStyle.None),"Customer"),
+				    #"Add NA Row" = Table.InsertRows(#"Merged Columns", 0, {[CustomerKey = -1, CustomerAlternateKey = "[Not Applicable]", Customer = "[Not Applicable]", City = "[Not Applicable]", StateProvinceName ="[Not Applicable]", EnglishCountryRegionName ="[Not Applicable]", PostalCode ="[Not Applicable]"]}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Add NA Row",{{"CustomerAlternateKey", "Customer ID"}, {"StateProvinceName", "State-Province"}, {"EnglishCountryRegionName", "Country-Region"}, {"PostalCode", "Postal Code"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

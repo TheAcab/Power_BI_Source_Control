@@ -1,0 +1,76 @@
+table 'Sales Territory'
+	lineageTag: 3fccebce-854b-4089-a5c6-44092c009ac5
+
+	column SalesTerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 92e5f74a-310f-4ba7-8de6-ecb6cf819c27
+		summarizeBy: none
+		sourceColumn: SalesTerritoryKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: 8350608e-2ad1-429d-853a-a3071fe8f8ab
+		isDefaultLabel
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	column Country
+		dataType: string
+		lineageTag: 38c220df-b3dd-43f8-9d5c-f2a8b467df78
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	column Group
+		dataType: string
+		lineageTag: 7eba6aaf-fc38-45a1-807d-e4e25ed0a695
+		summarizeBy: none
+		sourceColumn: Group
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	hierarchy 'Sales Territories'
+		lineageTag: 9f0c4434-da83-483a-bf18-0e1d00e38e0c
+
+		level Group
+			lineageTag: f636c625-cb97-4967-b2f0-a4c1704230c7
+			column: Group
+
+		level Country
+			lineageTag: 0f944311-da39-4549-803e-47bfd01bd9b5
+			column: Country
+
+		level Region
+			lineageTag: c358a465-515f-4899-97b7-1acbcb231326
+			column: Region
+
+	partition 'Sales Territory-86e24776-e692-45a5-9e92-91af2c36c1a6' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlServerInstance, SqlServerDatabase),
+				    dbo_DimSalesTerritory = Source{[Schema="dbo",Item="DimSalesTerritory"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(dbo_DimSalesTerritory,{"SalesTerritoryKey", "SalesTerritoryRegion", "SalesTerritoryCountry", "SalesTerritoryGroup"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Other Columns",{{"SalesTerritoryRegion", "Region"}, {"SalesTerritoryCountry", "Country"}, {"SalesTerritoryGroup", "Group"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

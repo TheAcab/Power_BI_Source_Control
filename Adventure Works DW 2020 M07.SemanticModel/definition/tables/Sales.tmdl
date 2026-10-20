@@ -1,0 +1,251 @@
+table Sales
+	lineageTag: b22f3964-61af-4d84-98b7-f9869d22fbdb
+
+	measure Revenue = SUM(Sales[Sales Amount])
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: cfc041a6-b1f8-4bfd-a3e8-575adfb6b333
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure RevenueYTD =
+			
+			TOTALYTD([Revenue],'Date'[Date], "6-30")
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 721a5ff4-1088-4d61-b2e8-836f6df37ba0
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure RevenuePY =
+			
+			VAR RenenuePriorYear =
+			CALCULATE([Revenue], SAMEPERIODLASTYEAR('Date'[Date]))
+			RETURN RenenuePriorYear
+		formatString: "R"#,0.###############;-"R"#,0.###############;"R"#,0.###############
+		lineageTag: 275c871e-f380-4c75-a194-e1b73ba955fa
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-ZA"}
+
+	measure RevenueYoY% =
+			
+			VAR RevenuePriorYear=
+			CALCULATE([Revenue], SAMEPERIODLASTYEAR('Date'[Date]))
+			RETURN DIVIDE([Revenue] - RevenuePriorYear, RevenuePriorYear)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 799035c6-609a-46df-8a0f-e85e52db11d4
+
+	measure CustomersLTD = ```
+			
+			VAR CustomersLTD=
+			CALCULATE(DISTINCTCOUNT(Sales[CustomerKey]), 
+			DATESBETWEEN('Date'[Date],BLANK(), MAX('Date'[Date])),
+			'Sales Order'[Channel] = "Internet")
+			RETURN CustomersLTD
+			```
+		formatString: 0
+		lineageTag: 79e59da8-0833-4315-88cc-5618d29b4464
+
+	measure 'New Customers' = ```
+			
+			VAR CustomersLTD=
+			CALCULATE(DISTINCTCOUNT(Sales[CustomerKey]), 
+			DATESBETWEEN('Date'[Date], 
+			BLANK(), 
+			MAX('Date'[Date])),
+			'Sales Order'[Channel] = "Internet")
+			VAR CustomersPrior=
+			CALCULATE(DISTINCTCOUNT(Sales[CustomerKey]), 
+			DATESBETWEEN('Date'[Date],
+			BLANK(),
+			MIN('Date'[Date]) -1),
+			'Sales Order'[Channel] = "Internet")
+			RETURN CustomersLTD - CustomersPrior
+			
+			```
+		formatString: 0
+		lineageTag: d15a5925-d5ae-47bf-9699-081de5afb04d
+
+	column SalesOrderLineKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f3062af4-a1de-453b-be7c-4e1345d8f9df
+		summarizeBy: none
+		sourceColumn: SalesOrderLineKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ResellerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 58321980-4374-44fc-8524-b3cfe4ee98d2
+		summarizeBy: none
+		sourceColumn: ResellerKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6b9917ad-efcc-49bf-9081-96127d05a133
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e818d41a-aae8-4a4d-8098-ab9c9abd26f5
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderDateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 43970504-4aaa-4519-bdd1-e455d8d159c5
+		summarizeBy: none
+		sourceColumn: OrderDateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DueDateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 718d5268-89ea-44a7-8635-f3b856766a5d
+		summarizeBy: count
+		sourceColumn: DueDateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ShipDateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4c9dcde1-d8c7-4882-bacd-210a1e0d3b5a
+		summarizeBy: count
+		sourceColumn: ShipDateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SalesTerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 64498de9-87c1-4548-9d8d-003ae96113d7
+		summarizeBy: none
+		sourceColumn: SalesTerritoryKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Quantity'
+		dataType: int64
+		formatString: #,0
+		lineageTag: 67216288-9304-4088-91f4-9cac75b2f358
+		summarizeBy: sum
+		sourceColumn: Order Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Price'
+		dataType: decimal
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 1cf88cd4-40f9-444d-a19b-89f1479c4957
+		summarizeBy: average
+		sourceColumn: Unit Price
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column 'Extended Amount'
+		dataType: decimal
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 49360dcf-ed82-49a7-b12a-4b8c2c4ec92a
+		summarizeBy: sum
+		sourceColumn: Extended Amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column 'Product Standard Cost'
+		dataType: decimal
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: abaa79d2-3cb3-4817-ac09-7679c738a92f
+		summarizeBy: sum
+		sourceColumn: Product Standard Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column 'Total Product Cost'
+		dataType: decimal
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 42f56b38-1a0f-4933-b157-9e9f70b80078
+		summarizeBy: sum
+		sourceColumn: Total Product Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column 'Sales Amount'
+		dataType: decimal
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: cfb9ce08-4e7f-4a23-8395-6b4d6835f471
+		summarizeBy: sum
+		sourceColumn: Sales Amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column 'Unit Price Discount Pct'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 40c88a6f-c6c5-40a7-85a2-3247c24e9248
+		summarizeBy: none
+		sourceColumn: Unit Price Discount Pct
+
+		annotation SummarizationSetBy = User
+
+	partition Sales-1c496a38-f0f4-4d25-b987-657177c38553 = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlServerInstance, SqlServerDatabase),
+				    dbo_vFactSales = Source{[Schema="dbo",Item="vFactSales"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(dbo_vFactSales,{"SalesOrderLineKey", "ResellerKey", "CustomerKey", "ProductKey", "OrderDateKey", "DueDateKey", "ShipDateKey", "SalesTerritoryKey", "OrderQuantity", "UnitPrice", "ExtendedAmount", "UnitPriceDiscountPct", "ProductStandardCost", "TotalProductCost", "SalesAmount"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"OrderQuantity", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"ExtendedAmount", "Extended Amount"}, {"OrderQuantity", "Order Quantity"}, {"ProductStandardCost", "Product Standard Cost"}, {"SalesAmount", "Sales Amount"}, {"TotalProductCost", "Total Product Cost"}, {"UnitPrice", "Unit Price"}, {"UnitPriceDiscountPct", "Unit Price Discount Pct"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
